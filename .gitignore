@@ -1,0 +1,7 @@
+__pycache__/
+
+.vscode/
+.history
+
+# Jupyter Notebook
+.ipynb_checkpoints

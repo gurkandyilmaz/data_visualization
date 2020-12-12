@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css')}}">
+        <title>{% block title %}{% endblock %}</title> 
+    </head>
+    <body>
+        <div class="navbar">
+            <a href="{{ url_for('visualize') }}" class="navbar-brand">Visualize</a>
+            <a href="{{ url_for('upload_file') }}" class="navbar">Upload</a>
+
+        </div>
+        <div class="body-content">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class=flashes>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            {% block content %}
+            {% endblock %}
+            <hr/>
+            <footer>
+                <p>© 2020</p>
+            </footer>
+        </div>
+
+    </body>
+</html>
