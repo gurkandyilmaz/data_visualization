@@ -79,15 +79,16 @@ def visualize():
 @app.route("/visualize/plot", methods=["GET", "POST"])
 def plot():
     user_request = (
-        {"graph_type":"bar", "column_name":"STATE"}, 
-        {"graph_type":"pie", "column_name":"ACCOUNT_LENGTH"},
-        {"graph_type":"bar", "column_name":"NUMBER_CUSTOMER_SERVICE_CALLS"},
-        {"graph_type":"pie", "column_name":"CHURN"},
-        {"graph_type":"correlation"},
-        {"graph_type":"scatter", "x":"AGE", "y":"PRICE"},
+        # {"graph_type":"bar", "column_name":"STATE"}, 
+        # {"graph_type":"pie", "column_name":"ACCOUNT_LENGTH"},
+        # {"graph_type":"bar", "column_name":"NUMBER_CUSTOMER_SERVICE_CALLS"},
+        # {"graph_type":"pie", "column_name":"CHURN"},
+        # {"graph_type":"correlation"},
+        # {"graph_type":"scatter", "x":"AGE", "y":"PRICE"},
         {"graph_type":"histogram", "x":"AGE", "bins":50, "density":True},
         {"graph_type":"histogram", "x":"PRICE", "bins":40, "density":False},
-
+        {"graph_type":"boxplot", "x":"AGE", "y":"PRICE"},
+        {"graph_type":"boxplot", "x":"AGE"},
     )
     
     print("PLOT FORM:", request.form.to_dict(flat=True))
@@ -95,38 +96,42 @@ def plot():
     df = process.read_file(get_data_folder() / app.config["UPLOADED_FILE_NAME"])
     df_categoric = process.process_categorical(df, column_types)
     df_numeric = process.process_numeric(df, column_types)
+    df_datetime = []
     print("DF NUM DTYPE:", df_numeric.dtypes)
     for user_req in user_request:
         if user_req.get("graph_type") == "bar":
             if user_req.get("column_name") in df_categoric.columns:
                 visualizer.plot_bar(df, user_req.get("column_name"))
             else:
-                # TODO Bar plot only available for categoric types
+                # TODO Bar plot only available for categoric columns
                 pass
         elif user_req.get("graph_type") == "pie":
             if user_req.get("column_name") in df_categoric.columns:
                 visualizer.plot_pie(df, user_req.get("column_name"))
             else:
-                # TODO Pie plot is only available for categoric types
+                # TODO Pie plot is only available for categoric columns
                 pass
-        elif (user_req.get("graph_type") == "correlation"):
+        elif user_req.get("graph_type") == "correlation":
             visualizer.plot_correlation(df_numeric)
         
         elif user_req.get("graph_type") == "scatter":
             if (user_req.get("x") in df_numeric.columns) and (user_req.get("y") in df_numeric.columns):
                 visualizer.plot_scatter(df_numeric, user_req.get("x"), user_req.get("y"))
             else:
-                # TODO Scatter is only available for numeric types
+                # TODO Scatter is only available for numeric columns
                 pass
         elif user_req.get("graph_type") == "histogram":
-            if (user_req.get("x") in df_numeric.columns):
+            if user_req.get("x") in df_numeric.columns:
                 visualizer.plot_histogram(df_numeric, user_req.get("x"), user_req.get("bins"), user_req.get("density"))
             else:
-                # TODO Histogram is only available for numeric types
+                # TODO Histogram is only available for numeric columns
                 pass
-
-
-
+        elif user_req.get("graph_type") == "boxplot":
+            if user_req.get("x") in df_datetime or user_req.get("y") in df_datetime: # Add df_datetime.columns
+                # TODO boxplot is only available for non_datetime type columns
+                pass
+            else:
+                visualizer.plot_boxplot(df, user_req.get("x"), user_req.get("y", -1))               
         else:
             # The graph cannot be drawn with the selected column type.
             pass

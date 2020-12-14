@@ -63,7 +63,6 @@ class VisualizeData():
         image_file = self._images_dir / "{column}_pie.png".format(column=column)
         fig.savefig(image_file, bbox_inches="tight")
         
-
     def plot_correlation(self, df_numeric):
         correlation_matrix = df_numeric.corr()
         title = "Correlation Matrix"
@@ -101,6 +100,24 @@ class VisualizeData():
         image_file = Path.joinpath(self._images_dir, "{name}_histogram.png".format(name=name))
         plt.savefig(image_file, bbox_inches="tight")
 
+    def plot_boxplot(self, df, x, y):
+        fig, ax = plt.subplots(figsize=(self._figsize_x, self._figsize_y))
+        if y != -1:
+            title = "Distribution of {x} vs {y}".format(x=x, y=y)
+            sns.boxplot(ax=ax, x=x, y=y, data=df)
+            ax.set_title(title)
+            ax.set_xlabel(x)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+            name = "{x}_vs_{y}".format(x=x, y=y).replace("/", " ").replace("\\", " ")
+        else:
+            title = "Distribution of {x}".format(x=x)
+            sns.boxplot(ax=ax, x=x, data=df)
+            ax.set_title(title)
+            name = "{x}".format(x=x).replace("/", " ").replace("\\", " ")
+        
+        image_file = self._images_dir / "{name}_boxplot.png".format(name=name)
+        fig.savefig(image_file, bbox_inches="tight")
+
         # for name in df_numeric.columns.to_list():
         #     plt.figure(figsize=(self._figsize_x, self._figsize_y))
         #     plt.title(name)
@@ -112,40 +129,40 @@ class VisualizeData():
         #     plt.savefig(image_file, bbox_inches="tight")
         #     plt.ioff()
     
-    def plot_counts_vs_word(self, frequencies_by_column):
-        for column_name in frequencies_by_column.keys():
-            title = "Word Counts by " + column_name
-            plt.figure(figsize=(self._figsize_x, self._figsize_y))
-            # plt.ion()
-            plt.title(title)
-            plt.ylabel("Counts")
-            plt.xticks(rotation=90)
-            plt.bar(frequencies_by_column[column_name].keys(), frequencies_by_column[column_name].values())
-            image_file = Path.joinpath(self._images_dir, "{title}.png".format(title=title))
-            plt.ioff()
-            plt.savefig(image_file, bbox_inches="tight")
+    # def plot_counts_vs_word(self, frequencies_by_column):
+    #     for column_name in frequencies_by_column.keys():
+    #         title = "Word Counts by " + column_name
+    #         plt.figure(figsize=(self._figsize_x, self._figsize_y))
+    #         # plt.ion()
+    #         plt.title(title)
+    #         plt.ylabel("Counts")
+    #         plt.xticks(rotation=90)
+    #         plt.bar(frequencies_by_column[column_name].keys(), frequencies_by_column[column_name].values())
+    #         image_file = Path.joinpath(self._images_dir, "{title}.png".format(title=title))
+    #         plt.ioff()
+    #         plt.savefig(image_file, bbox_inches="tight")
         
-    def plot_wordcloud(self, frequencies_by_column):
-        for column_name in frequencies_by_column.keys():
-            word_cloud = WordCloud(background_color="white", width=1200, height=400).generate_from_frequencies(frequencies_by_column[column_name])
-            image_file = Path.joinpath(self._images_dir, "WordCloud by {name}.png".format(name=column_name))
-            plt.figure(figsize=(self._figsize_x, self._figsize_y))
-            plt.imshow(word_cloud, interpolation="bilinear")
-            plt.axis("off")
-            plt.ioff()
-            word_cloud.to_file(image_file)
+    # def plot_wordcloud(self, frequencies_by_column):
+    #     for column_name in frequencies_by_column.keys():
+    #         word_cloud = WordCloud(background_color="white", width=1200, height=400).generate_from_frequencies(frequencies_by_column[column_name])
+    #         image_file = Path.joinpath(self._images_dir, "WordCloud by {name}.png".format(name=column_name))
+    #         plt.figure(figsize=(self._figsize_x, self._figsize_y))
+    #         plt.imshow(word_cloud, interpolation="bilinear")
+    #         plt.axis("off")
+    #         plt.ioff()
+    #         word_cloud.to_file(image_file)
     
-    def plot_row_length(self, df_with_row_length):
-        for name in df_with_row_length.columns.to_list():
-            title = "Row Length in " + name
-            plt.figure(figsize=(self._figsize_x, self._figsize_y))
-            plt.title(title)
-            plt.ylabel("Count")
-            plt.xlabel("Row Length")
-            plt.hist(df_with_row_length[name])
-            image_file = Path.joinpath(self._images_dir, "{title}.png".format(title=title))
-            plt.savefig(image_file, bbox_inches="tight")
-            plt.ioff()
+    # def plot_row_length(self, df_with_row_length):
+    #     for name in df_with_row_length.columns.to_list():
+    #         title = "Row Length in " + name
+    #         plt.figure(figsize=(self._figsize_x, self._figsize_y))
+    #         plt.title(title)
+    #         plt.ylabel("Count")
+    #         plt.xlabel("Row Length")
+    #         plt.hist(df_with_row_length[name])
+    #         image_file = Path.joinpath(self._images_dir, "{title}.png".format(title=title))
+    #         plt.savefig(image_file, bbox_inches="tight")
+    #         plt.ioff()
         
         
         
