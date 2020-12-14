@@ -11,25 +11,37 @@ from snowballstemmer import TurkishStemmer
 import time
 from string import punctuation
 from pathlib import Path
+from utils.paths import get_visualization_folder
 
 
 class ProcessData():
-    def __init__(self):
-        print("Class INITIATED with cwd: {}".format(Path.cwd()))
-        self._stopwords_tr = self.read_stopwords(Path.cwd().parent.joinpath("visualization/data/stopwords_tr.txt"))
-        self._stopwords_en = self.read_stopwords(Path.cwd().parent.joinpath("visualization/data/stopwords_en.txt"))
+    def __init__(self, ):
+        # print("Class INITIATED with cwd: {}".format(Path.cwd()))
+        self._stopwords_tr = self.read_stopwords(get_visualization_folder() / "data/stopwords_tr.txt")
+        self._stopwords_en = self.read_stopwords(get_visualization_folder() / "data/stopwords_en.txt")
         self._stemmer_en = stem.SnowballStemmer('english')
         self._stemmer_tr = TurkishStemmer()
 
     def read_file(self, excel_file_path):
-        # excel_file_path = Path.joinpath(Path.cwd(), "data").joinpath(excel_filename)
         try:
             t0 = time.time()
             df = pd.read_excel(excel_file_path)
-            print("File {0} Read Time: {1:.5f} sec.".format(excel_file_path, time.time() - t0))
+            print("UPLOADED File {0} Read Time: {1:.5f} sec.".format(excel_file_path, time.time() - t0))
             return df
         except Exception as e:
             print(e)
+
+    def process_categorical(self, dataframe, column_types):
+        categoric = {col:"category" for col, col_type in column_types.items() if col_type == "categoric"}
+        df = dataframe.copy()
+        df = df.astype(categoric)
+        df_categoric = df.select_dtypes(include=["category"])
+        return df_categoric
+
+    def process_numeric(self, dataframe, column_types):
+        df_numeric = dataframe.select_dtypes(include=["number"])
+        # corr_matrix = df_numeric.corr()
+        return df_numeric
 
     def process_df_text(self, df):
         df_text = df.select_dtypes(include=["object"]).copy()
@@ -46,11 +58,6 @@ class ProcessData():
 
         return text_series, df_row_length
 
-    def process_df_numeric(self, df):
-        df_numeric = df.select_dtypes(include=["number"])
-        corr_matrix = df_numeric.corr()
-        return df_numeric, corr_matrix
-    
     def make_lowercase(self, text):
         return text.lower()
     

@@ -8,3 +8,6 @@ def get_root_folder():
 def get_visualization_folder():
     # print("Visualization FOLDER in paths.py:, ", get_root_folder() / "visualization")
     return get_root_folder() / "visualization"
+
+def get_data_folder():
+    return get_root_folder() / "visualization/data"

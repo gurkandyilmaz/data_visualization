@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}
+PLOT
+{% endblock %}
+{% block content %}
+
+{{ column_types }}
+
+<hr>
+{% for image in images %}
+<section class="col-md-4 col-sm-6">
+    <h1 class="message">{{ image }}</h1>
+    <img src="{{ url_for('static', filename='images/' + image) }}" alt="TEST">
+    <br><br>
+</section>
+{% endfor %}
+
+{% endblock %}
