@@ -40,8 +40,21 @@ class ProcessData():
 
     def process_numeric(self, dataframe, column_types):
         df_numeric = dataframe.select_dtypes(include=["number"])
-        # corr_matrix = df_numeric.corr()
+        # TODO when user selects a categoric column as numeric ??
         return df_numeric
+    
+    def process_datetime(self, dataframe, column_types):
+        date_time = {col:"datetime" for col, col_type in column_types.items() if col_type == "datetime"}
+        
+        list(date_time.values())[0]
+        dataframe.loc[:, list(date_time)[0]] = pd.to_datetime(dataframe[list(date_time)[0]], unit="s")
+        dataframe = dataframe.sort_values(by=list(date_time)[0])
+        # df = df.sort_values(by="timestamp_converted")
+        dataframe = dataframe.dropna()
+        # dataframe = dataframe.set_index(list(date_time)[0])
+
+        # df_datetime = df.select_dtypes(include=["datetime"])
+        return dataframe.loc[:, list(date_time)[0] ]
 
     def process_df_text(self, df):
         df_text = df.select_dtypes(include=["object"]).copy()

@@ -118,6 +118,42 @@ class VisualizeData():
         image_file = self._images_dir / "{name}_boxplot.png".format(name=name)
         fig.savefig(image_file, bbox_inches="tight")
 
+    def plot_time(self, df, x, y1, y2):
+        fig, ax = plt.subplots(figsize=(self._figsize_x, self._figsize_y))
+        if y1 != -1 and y2 !=-1:
+            title = "{y1}_{y2} vs {x}".format(y1=y1, y2=y2, x=x)
+            ax2 = ax.twinx()
+            p1 = ax.plot_date(df.loc[:, x], df.loc[:, y1], linestyle='solid', color="blue", label=y1)
+            p2 = ax2.plot_date(df.loc[:, x], df.loc[:, y2], linestyle='solid', color="orange", label=y2)
+            ax.set_ylabel(y1)
+            ax2.set_ylabel(y2)
+            ax.set_title(title)
+            ax.legend((p1[0], p2[0]),(p1[0].get_label(), p2[0].get_label()))
+            name = "{y1}_{y2}_vs_{x}".format(y1=y1, y2=y2, x=x).replace("/", " ").replace("\\", " ")
+            
+        elif y1 != -1:
+            title = "{y1} vs {x}".format(y1=y1, x=x)
+            p1 = ax.plot_date(df.loc[:, x], df.loc[:, y1], linestyle='solid', color="blue", label=y1)
+            ax.set_ylabel(y1)
+            ax.set_title(title)
+            ax.legend(p1[0].get_label())
+            name = "{y1}_vs_{x}".format(y1=y1, x=x).replace("/", " ").replace("\\", " ")
+
+        elif y2 != -1:
+            title = "{y2} vs {x}".format(y2=y2, x=x)
+            ax2 = ax.twinx()
+            p2 = ax.plot_date(df.loc[:, x], df.loc[:, y2], linestyle='solid', color="blue", label=y2)
+            ax.set_ylabel(y2)
+            ax.set_title(title)
+            ax.legend(p2[0].get_label())
+            name = "{y2}_vs_{x}".format(y2=y2, x=x).replace("/", " ").replace("\\", " ")    
+        
+        fig.autofmt_xdate()
+        
+        image_file = self._images_dir / "{name}_timeseries.png".format(name=name)
+        fig.savefig(image_file, bbox_inches="tight")
+
+
         # for name in df_numeric.columns.to_list():
         #     plt.figure(figsize=(self._figsize_x, self._figsize_y))
         #     plt.title(name)
