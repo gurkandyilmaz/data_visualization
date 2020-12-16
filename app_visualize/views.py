@@ -151,10 +151,9 @@ def plot():
 process = ProcessData()
 visualizer = VisualizeData(IMAGES_DIR)
 
-# @app.route("/hello/")
-# @app.route("/hello/<name>")
-# def base(name=None):    
-#     return render_template("base.html", name=name, date=datetime.now())
+@app.route("/high-charts/")
+def high_charts():    
+    return render_template("high_charts.html")
 
 # @app.route("/api/data")
 # def get_data():
