@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import json
 from flask import Flask, render_template, request, redirect, abort, url_for, flash, session
 from werkzeug.utils import secure_filename
 from . import app
@@ -8,6 +9,7 @@ from visualization.ProcessData import ProcessData
 from visualization.VisualizeData import VisualizeData
 
 IMAGES_DIR = Path(Path(app.static_folder).joinpath("images"))
+JSON_FILES_DIR = Path(Path(app.static_folder).joinpath("json"))
 # UPLOADED_FILE_DIR = get_data_folder()
 # UPLOADED_FILE_NAME = ""
 
@@ -44,19 +46,22 @@ def upload_file():
     return render_template("upload_file.html")
 
 @app.route("/")
-@app.route("/visualize/")
-def visualize():
-    print("File name in visualize: ", app.config['UPLOADED_FILE_NAME'])
+@app.route("/select-types/", methods=["GET", "POST"])
+def select_types():
+    print("File name in select_types: ", app.config['UPLOADED_FILE_NAME'])
     print("ROOT FOLDER:", get_root_folder())
     print("Visualization FOLDER:", get_visualization_folder())
     column_names = []
-    if app.config['UPLOADED_FILE_NAME']:
+        
+
+    if request.method == "GET" and app.config['UPLOADED_FILE_NAME']:
         file_path = get_data_folder() / app.config["UPLOADED_FILE_NAME"]
         # uploaded_file_path = get_data_folder().joinpath(app.config['UPLOADED_FILE_NAME'])
-        print("FILE will be read: ", file_path)
+        # print("FILE will be read: ", file_path)
         df = process.read_file(file_path)
         column_names = df.columns.to_list()
-        print("Visualize:", df.shape)
+        
+        # print("Visualize:", df.shape)
         # df_tokenized, df_row_length = process.process_df_text(df)
         # frequencies_by_column = {}
         # for index_name in df_tokenized.index:
@@ -70,11 +75,32 @@ def visualize():
         #     visualizer.plot_correlation(correlation_matrix)
         #     visualizer.plot_hist(df_numeric)
         # app.config['UPLOADED_FILE_NAME'] = ""
+
+    if request.method == "POST":
+        column_types = request.form.to_dict(flat=True)
+        user_file_and_types = {"types": column_types, "file_name": app.config['UPLOADED_FILE_NAME']}
+        with open( JSON_FILES_DIR / "user_file_and_types.json", "w+") as file:
+            json.dump(user_file_and_types, file, sort_keys=False, indent=4)
+        return render_template("select_types.html", column_names=column_names, column_types=column_types)
     
     # print("IMAGES FOLDER: {0}".format(app.static_folder))
     # print("IMAGES LIST: {0}".format(images_list))
     
-    return render_template("visualize.html", column_names=column_names)
+    return render_template("select_types.html", column_names=column_names)
+
+@app.route("/visualize/", methods=["GET","POST"])
+def visualize():
+    with open(JSON_FILES_DIR / "user_file_and_types.json", "r") as file:
+        user_file_and_types = json.load(file)
+    # print("Column TYPES in visualize:", user_file_and_types)
+    if request.method == "POST":
+        graph_types = request.form.to_dict(flat=True).get("types")
+        try:
+            graph_types_list = json.loads(graph_types)
+            print("Graph Types in visualize ", graph_types_list)
+        except:
+            return "invalid input"
+    return render_template("visualize.html", user_file_and_types=user_file_and_types)
 
 @app.route("/visualize/plot/", methods=["GET", "POST"])
 def plot():

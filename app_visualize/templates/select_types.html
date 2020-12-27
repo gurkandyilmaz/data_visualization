@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}
+HOME
+{% endblock %}
+
+{% block content %}
+<p>Select Types.</p>
+<section class="row">
+    {% if column_names %}
+        <!-- <form action="{{ url_for('plot') }}" method="POST"> -->
+        <form action="{{ url_for('select_types') }}" method="POST">
+            {% for column in column_names %}
+                <label for="column"><strong>{{ column }}</strong>: </label>
+                <select name="{{ column }}" id="type" style="width: 90px;">
+                    <option value="datetime">Datetime</option>
+                    <option value="categoric">Categoric</option>
+                    <option value="numeric">Numeric</option>
+                    <option value="text">Text</option>
+                </select>
+                <br>
+            {% endfor %}
+            <br>
+            <input type="submit" value="Send">
+        </form>
+    {% else %}
+        {% if column_types %}
+            <strong>Columns' types:</strong>
+            {% for key, value in column_types.items() %}
+                <li><strong>{{key}}:</strong> {{value}}</li>
+            {% endfor %}
+        {% else %}
+            <strong>No columns data available</strong>
+        {% endif %}
+        
+    {% endif %}
+
+
+</section>    
+{% endblock %}
