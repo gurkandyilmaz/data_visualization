@@ -30,11 +30,37 @@ class ProcessData():
             return df
         except Exception as e:
             print(e)
+    
+    def cast_datatypes(self, df, user_selected_types):
+        try:
+            types = user_selected_types.get("types")
+            types_for_pandas = {}
+            for key, value in types.items():
+                if value == "text":
+                    types_for_pandas.update({key:"object"})
+                elif value == "categoric":
+                    types_for_pandas.update({key:"category"})
+                elif value == "numeric":
+                    types_for_pandas.update({key:"int64"})
+                elif value == "datetime":
+                    types_for_pandas.update({key:"datetime64[s]"})
 
-    def process_categorical(self, dataframe, column_types):
-        categoric = {col:"category" for col, col_type in column_types.items() if col_type == "categoric"}
+            df_copy = df.copy().dropna().astype(dtype=types_for_pandas)
+            # datetime format should be day/month/year.
+            # TODO use the below code in the timeplot visualization
+            # datetime_cols = df_copy.select_dtypes(include=["datetime"])
+            # if not datetime_cols.columns.empty:
+            #     df_copy.loc[:, datetime_cols.columns] = df_copy.select_dtypes(include=["datetime"]).apply(lambda column:column.dt.strftime("%d/%m/%Y"))
+
+            return df_copy
+
+        except Exception as e:
+            return e
+
+    def process_categorical(self, dataframe):
+        # categoric = {col:"category" for col, col_type in column_types.items() if col_type == "categoric"}
         df = dataframe.copy()
-        df = df.astype(categoric)
+        # df = df.astype(categoric)
         df_categoric = df.select_dtypes(include=["category"])
         return df_categoric
 

@@ -19,6 +19,13 @@ class VisualizeData():
         self._figsize_x = 12
         self._figsize_y = 8
     
+    def prepare_pieplot(self, df_categorical, column_name):
+        data_pieplot = []
+        category_counts = df_categorical.loc[:, column_name].value_counts().to_dict()
+        for category, value in category_counts.items():
+            data_pieplot.append({"name": category, "y": value})
+        return data_pieplot
+
     def plot_bar(self, df_categoric, column):
         count = df_categoric.loc[:, column].value_counts()
         names = count.index.values

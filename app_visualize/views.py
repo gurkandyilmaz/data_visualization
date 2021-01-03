@@ -49,11 +49,10 @@ def upload_file():
 @app.route("/select-types/", methods=["GET", "POST"])
 def select_types():
     print("File name in select_types: ", app.config['UPLOADED_FILE_NAME'])
-    print("ROOT FOLDER:", get_root_folder())
-    print("Visualization FOLDER:", get_visualization_folder())
+    # print("ROOT FOLDER:", get_root_folder())
+    # print("Visualization FOLDER:", get_visualization_folder())
     column_names = []
         
-
     if request.method == "GET" and app.config['UPLOADED_FILE_NAME']:
         file_path = get_data_folder() / app.config["UPLOADED_FILE_NAME"]
         # uploaded_file_path = get_data_folder().joinpath(app.config['UPLOADED_FILE_NAME'])
@@ -81,6 +80,15 @@ def select_types():
         user_file_and_types = {"types": column_types, "file_name": app.config['UPLOADED_FILE_NAME']}
         with open( JSON_FILES_DIR / "user_file_and_types.json", "w+") as file:
             json.dump(user_file_and_types, file, sort_keys=False, indent=4)
+        
+        # file_path = get_data_folder() / app.config["UPLOADED_FILE_NAME"]
+        # df = process.read_file(file_path)
+        # df_copy = process.cast_datatypes(df, user_file_and_types)
+        # # try:
+        # #     column_names = df_copy.columns.to_list()
+        # # except:
+        # #     return "Incorrect Datatypes were selected"
+        # print("DF_COPY dataypes: {types}".format(types=df_copy.dtypes))
         return render_template("select_types.html", column_names=column_names, column_types=column_types)
     
     # print("IMAGES FOLDER: {0}".format(app.static_folder))
@@ -92,12 +100,28 @@ def select_types():
 def visualize():
     with open(JSON_FILES_DIR / "user_file_and_types.json", "r") as file:
         user_file_and_types = json.load(file)
-    # print("Column TYPES in visualize:", user_file_and_types)
+    
     if request.method == "POST":
         graph_types = request.form.to_dict(flat=True).get("types")
         try:
             graph_types_list = json.loads(graph_types)
             print("Graph Types in visualize ", graph_types_list)
+
+            if app.config["UPLOADED_FILE_NAME"]:
+                file_path = get_data_folder() / app.config["UPLOADED_FILE_NAME"]
+                df = process.read_file(file_path)
+                df_copy = process.cast_datatypes(df, user_file_and_types)
+                df_categoric = process.process_categorical(df_copy)
+                print("DF_Categoric : {types}".format(types=df_categoric.dtypes))
+            
+            for graph in graph_types_list:
+                if (graph.get("type") == "pieplot") and (graph.get("x") in df_categoric.columns):
+                    category_counts = visualizer.prepare_pieplot(df_categoric, graph.get("x"))
+                    with open( JSON_FILES_DIR / "data_pieplot.json", "w+") as file:
+                        json.dump(category_counts, file, sort_keys=False, indent=4)
+                else:
+                    pass
+                    #pieplot only accepts categorical columns
         except:
             return "invalid input"
     return render_template("visualize.html", user_file_and_types=user_file_and_types)
@@ -123,7 +147,7 @@ def plot():
         print("PLOT FORM:", request.form.to_dict(flat=True))
         column_types = request.form.to_dict(flat=True)
         df = process.read_file(get_data_folder() / app.config["UPLOADED_FILE_NAME"])
-        df_categoric = process.process_categorical(df, column_types)
+        df_categoric = process.process_categorical(df)
         df_numeric = process.process_numeric(df, column_types)
         df_datetime = process.process_datetime(df, column_types)
         print("DF datetime DTYPE:", df_datetime.dtypes)

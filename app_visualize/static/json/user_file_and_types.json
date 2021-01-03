@@ -1,13 +1,13 @@
 {
     "types": {
-        "Survived": "text",
-        "Pclass": "text",
-        "Name": "numeric",
-        "Sex": "datetime",
-        "Age": "datetime",
-        "Siblings/Spouses Aboard": "datetime",
-        "Parents/Children Aboard": "datetime",
-        "Fare": "categoric"
+        "Survived": "categoric",
+        "Pclass": "categoric",
+        "Name": "text",
+        "Sex": "categoric",
+        "Age": "numeric",
+        "Fare": "numeric",
+        "TIMESTAMP": "datetime",
+        "Date": "datetime"
     },
     "file_name": "titanic.xlsx"
 }
