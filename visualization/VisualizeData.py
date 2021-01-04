@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from nltk import FreqDist, word_tokenize, RegexpTokenizer, stem
 from snowballstemmer import TurkishStemmer
 
-import time
+import time, json
 from string import punctuation
 from pathlib import Path
 
@@ -20,11 +20,40 @@ class VisualizeData():
         self._figsize_y = 8
     
     def prepare_pieplot(self, df_categorical, column_name):
-        data_pieplot = []
+        data_pieplot = {column_name:[]}
         category_counts = df_categorical.loc[:, column_name].value_counts().to_dict()
         for category, value in category_counts.items():
-            data_pieplot.append({"name": category, "y": value})
+            data_pieplot.get(column_name).append({"name": category, "y": value})
         return data_pieplot
+    
+    def prepare_barplot(self, df, x, y=None):
+        if not y:
+            return self.prepare_pieplot(df, x)
+        else:
+            data_barplot = {y:[]}
+            data_x_and_y = df.loc[:, [x,y]].groupby(x).mean().to_dict()
+            for label, value in data_x_and_y.get(y).items():
+                data_barplot.get(y).append({"name": label, "y": round(value,1)})
+            return data_barplot
+    
+    def prepare_scatterplot(self, df, x, y, z=None):
+        if not z:
+            title = "{0} vs {1}".format(x,y)
+            data_scatterplot = {}
+            df_copy = df.loc[:, [x,y]]
+            x_and_y_pairs = [[int(x),int(y)] for x, y in df_copy.values]
+            data_scatterplot.update({title: x_and_y_pairs})
+        
+        return data_scatterplot
+
+    def prepare_timeplot(self, df, x, y1, y2=None, y3=None):
+        df_copy = df.copy().sort_values(by=[x])
+        x_values = [x_value.strftime("%d/%m/%Y") for x_value in df_copy.loc[:, x].dt.date]
+        data_timeplot = [{"x_axis": x_values},]
+        for numeric_col in [y1 , y2, y3]:
+            if numeric_col:
+                data_timeplot.append({"name": numeric_col, "data": df_copy.loc[:,numeric_col].to_list()})
+        return data_timeplot
 
     def plot_bar(self, df_categoric, column):
         count = df_categoric.loc[:, column].value_counts()
@@ -208,4 +237,6 @@ class VisualizeData():
     #         plt.ioff()
         
         
-        
+def save_as_json(data_list, json_files_dir, file_name):
+    with open( json_files_dir / "{0}.json".format(file_name), "w+") as file:
+        json.dump(data_list, file, sort_keys=False, indent=4)    

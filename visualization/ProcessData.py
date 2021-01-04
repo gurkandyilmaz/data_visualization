@@ -15,7 +15,7 @@ from utils.paths import get_visualization_folder
 
 
 class ProcessData():
-    def __init__(self, ):
+    def __init__(self):
         # print("Class INITIATED with cwd: {}".format(Path.cwd()))
         self._stopwords_tr = self.read_stopwords(get_visualization_folder() / "data/stopwords_tr.txt")
         self._stopwords_en = self.read_stopwords(get_visualization_folder() / "data/stopwords_en.txt")
@@ -57,30 +57,25 @@ class ProcessData():
         except Exception as e:
             return e
 
-    def process_categorical(self, dataframe):
-        # categoric = {col:"category" for col, col_type in column_types.items() if col_type == "categoric"}
-        df = dataframe.copy()
-        # df = df.astype(categoric)
-        df_categoric = df.select_dtypes(include=["category"])
+    def process_categorical(self, dataframe): 
+        df_categoric = dataframe.select_dtypes(include=["category"])
         return df_categoric
 
-    def process_numeric(self, dataframe, column_types):
+    def process_numeric(self, dataframe):
         df_numeric = dataframe.select_dtypes(include=["number"])
         # TODO when user selects a categoric column as numeric ??
         return df_numeric
     
-    def process_datetime(self, dataframe, column_types):
-        date_time = {col:"datetime" for col, col_type in column_types.items() if col_type == "datetime"}
-        
-        list(date_time.values())[0]
-        dataframe.loc[:, list(date_time)[0]] = pd.to_datetime(dataframe[list(date_time)[0]], unit="s")
-        dataframe = dataframe.sort_values(by=list(date_time)[0])
+    def process_datetime(self, dataframe):
+        # datetime format should be "day/month/year".
+        df_datetime = dataframe.select_dtypes(include=["datetime"]).copy()
+        # if not df_datetime.columns.empty:
+        #     df_datetime = df_datetime.apply(lambda column: column.dt.strftime("%d/%m/%Y"))
+        # dataframe = dataframe.sort_values(by=list(date_time)[0])
         # df = df.sort_values(by="timestamp_converted")
-        dataframe = dataframe.dropna()
         # dataframe = dataframe.set_index(list(date_time)[0])
-
         # df_datetime = df.select_dtypes(include=["datetime"])
-        return dataframe.loc[:, list(date_time)[0] ]
+        return df_datetime
 
     def process_df_text(self, df):
         df_text = df.select_dtypes(include=["object"]).copy()

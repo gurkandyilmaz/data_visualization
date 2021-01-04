@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from . import app
 from utils.paths import get_root_folder, get_visualization_folder, get_data_folder
 from visualization.ProcessData import ProcessData
-from visualization.VisualizeData import VisualizeData
+from visualization.VisualizeData import VisualizeData, save_as_json
 
 IMAGES_DIR = Path(Path(app.static_folder).joinpath("images"))
 JSON_FILES_DIR = Path(Path(app.static_folder).joinpath("json"))
@@ -14,7 +14,7 @@ JSON_FILES_DIR = Path(Path(app.static_folder).joinpath("json"))
 # UPLOADED_FILE_NAME = ""
 
 def is_extension_valid(file_name):
-    return "." in file_name and file_name.rsplit(".",1)[1].lower() in app.config["UPLOAD_EXTENSIONS"]
+    return "." in file_name and file_name.rsplit(".",1)[1].lower() in app.config["UPLOAD_EXTENSIONS"] 
 
 @app.route("/upload/", methods=["GET", "POST"])
 def upload_file():
@@ -112,16 +112,37 @@ def visualize():
                 df = process.read_file(file_path)
                 df_copy = process.cast_datatypes(df, user_file_and_types)
                 df_categoric = process.process_categorical(df_copy)
-                print("DF_Categoric : {types}".format(types=df_categoric.dtypes))
+                df_numeric = process.process_numeric(df_copy)
+                df_datetime = process.process_datetime(df_copy)
+
+                # print("DF_Categoric : {types}".format(types=df_categoric.dtypes))
+                # print("DF_Numeric : {types}".format(types=df_numeric.dtypes))
+                print("DF_Datetime : {types}".format(types=df_datetime.dtypes))
             
             for graph in graph_types_list:
                 if (graph.get("type") == "pieplot") and (graph.get("x") in df_categoric.columns):
                     category_counts = visualizer.prepare_pieplot(df_categoric, graph.get("x"))
-                    with open( JSON_FILES_DIR / "data_pieplot.json", "w+") as file:
-                        json.dump(category_counts, file, sort_keys=False, indent=4)
-                else:
-                    pass
+                    save_as_json(category_counts, JSON_FILES_DIR, "data_pieplot")
+                    # with open( JSON_FILES_DIR / "data_pieplot.json", "w+") as file:
+                    #     json.dump(category_counts, file, sort_keys=False, indent=4)
+                elif (graph.get("type") == "barplot") and (graph.get("x") in df_categoric.columns):
+                    if graph.get("y"):
+                        if graph.get("y") in df_numeric.columns:
+                            data_barplot = visualizer.prepare_barplot(df_copy, graph.get("x"), graph.get("y"))
+                            save_as_json(data_barplot, JSON_FILES_DIR, "data_barplot_xy")
+                    else:
+                        label_counts = visualizer.prepare_barplot(df_categoric, graph.get("x"))
+                        save_as_json(label_counts, JSON_FILES_DIR, "data_barplot_x")
+                elif (graph.get("type") == "scatterplot"):
+                    if (graph.get("x") in df_numeric.columns) and (graph.get("y") in df_numeric.columns):
+                        data_scatter = visualizer.prepare_scatterplot(df_copy, graph.get("x"), graph.get("y"))
+                        save_as_json(data_scatter, JSON_FILES_DIR, "data_scatter_xy")
+                elif graph.get("type") == "timeplot":
+                    if (graph.get("x") in df_datetime.columns) and (graph.get("y") in df_numeric.columns):
+                        data_timeplot = visualizer.prepare_timeplot(df_copy, graph.get("x"), graph.get("y"))
+                        save_as_json(data_timeplot, JSON_FILES_DIR, "data_timeplot_xy")
                     #pieplot only accepts categorical columns
+                
         except:
             return "invalid input"
     return render_template("visualize.html", user_file_and_types=user_file_and_types)
@@ -148,8 +169,8 @@ def plot():
         column_types = request.form.to_dict(flat=True)
         df = process.read_file(get_data_folder() / app.config["UPLOADED_FILE_NAME"])
         df_categoric = process.process_categorical(df)
-        df_numeric = process.process_numeric(df, column_types)
-        df_datetime = process.process_datetime(df, column_types)
+        df_numeric = process.process_numeric(df)
+        df_datetime = process.process_datetime(df)
         print("DF datetime DTYPE:", df_datetime.dtypes)
         print("DF datetime type:", type(df_datetime))
         for user_req in user_request:

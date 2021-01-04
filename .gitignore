@@ -9,3 +9,5 @@ __pycache__/
 pandas profiling html/*
 visualization/data/*
 app_visualize/static/images/*
+app_visualize/static/js/*
+app_visualize/static/json/*
