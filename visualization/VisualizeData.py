@@ -54,7 +54,58 @@ class VisualizeData():
             if numeric_col:
                 data_timeplot.append({"name": numeric_col, "data": df_copy.loc[:,numeric_col].to_list()})
         return data_timeplot
+    
+    def prepare_boxplot(self, df_numeric, x):
+        data = []
+        x_axis = [x]
+        name = x
+        describe_df = df_numeric.loc[:, x].describe().to_dict()
+        min_df = describe_df.get("min")
+        q_min_df = describe_df.get("25%")
+        median_df = describe_df.get("50%")
+        q_max_df = describe_df.get("75%")
+        max_df = describe_df.get("max")
+        data.append([min_df, q_min_df, median_df, q_max_df, max_df])
 
+        q_low = df_numeric.loc[:, x].quantile(0.01)
+        q_high = df_numeric.loc[:, x].quantile(0.99)
+        outliers = set(df_numeric[(df_numeric["Age"] > q_high) | (df_numeric["Age"] < q_low)]["Age"])
+        data_outliers = [[0,outlier] for outlier in outliers]
+        
+        data_boxplot = {"x_axis": x_axis, "series": [{"name":name, "data":data},{"name":"Outliers", "data":data_outliers}] }
+        return data_boxplot
+
+    def prepare_correlation(self, df_numeric):
+        data = []
+        corr_matrix = df_numeric.corr()
+        for row in range(0, corr_matrix.shape[0]):
+            for column in range(0, corr_matrix.shape[1]):
+                data.append([row, column, round(corr_matrix.iloc[row, column], 4) ])
+                
+        data_correlation = {"x_y_axis": df_numeric.columns.to_list(), "series":[{"name": "correlation matrix", "data": data}]}
+        return data_correlation
+
+    def prepare_histogram(self, df_numeric, x):
+        return df_numeric.loc[:, x].to_list()
+
+    def prepare_wordcloud(self, text_dict, x):
+        word_frequencies = self.freq_dist(text_dict.get(x))
+        data_wordcloud = []
+        for word, freq in word_frequencies.items():
+            data_wordcloud.append([word, int(freq)])
+        return data_wordcloud
+
+    def freq_dist(self, text):
+        counter = CountVectorizer(ngram_range=(1,2), max_features=100)
+        counter_fit = counter.fit_transform([text])
+        counts = np.asarray(counter_fit.sum(axis=0))
+        words = counter.get_feature_names()
+        freq = {}
+        for word, count in zip(words, counts[0]):
+            freq[word] = count
+        freq_sorted = {word:count for word,count in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+        return freq_sorted   
+    
     def plot_bar(self, df_categoric, column):
         count = df_categoric.loc[:, column].value_counts()
         names = count.index.values
@@ -238,5 +289,5 @@ class VisualizeData():
         
         
 def save_as_json(data_list, json_files_dir, file_name):
-    with open( json_files_dir / "{0}.json".format(file_name), "w+") as file:
-        json.dump(data_list, file, sort_keys=False, indent=4)    
+    with open( json_files_dir / "{0}.json".format(file_name), "w+", encoding="utf8") as file:
+        json.dump(data_list, file, sort_keys=False, indent=None)    

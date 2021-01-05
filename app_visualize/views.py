@@ -114,6 +114,7 @@ def visualize():
                 df_categoric = process.process_categorical(df_copy)
                 df_numeric = process.process_numeric(df_copy)
                 df_datetime = process.process_datetime(df_copy)
+                text_processed_by_cols = process.process_text(df_copy)
 
                 # print("DF_Categoric : {types}".format(types=df_categoric.dtypes))
                 # print("DF_Numeric : {types}".format(types=df_numeric.dtypes))
@@ -141,8 +142,21 @@ def visualize():
                     if (graph.get("x") in df_datetime.columns) and (graph.get("y") in df_numeric.columns):
                         data_timeplot = visualizer.prepare_timeplot(df_copy, graph.get("x"), graph.get("y"))
                         save_as_json(data_timeplot, JSON_FILES_DIR, "data_timeplot_xy")
-                    #pieplot only accepts categorical columns
-                
+                elif graph.get("type") == "boxplot":
+                    if graph.get("x") in df_numeric.columns:
+                        data_boxplot = visualizer.prepare_boxplot(df_numeric, graph.get("x"))
+                        save_as_json(data_boxplot, JSON_FILES_DIR, "data_boxplot_x")
+                elif graph.get("type") == "correlation":
+                        data_correlation = visualizer.prepare_correlation(df_numeric)
+                        save_as_json(data_correlation, JSON_FILES_DIR, "data_correlation")
+                elif graph.get("type") == "histogram":
+                    if graph.get("x") in df_numeric.columns:
+                        data_histogram = visualizer.prepare_histogram(df_numeric, graph.get("x"))
+                        save_as_json(data_histogram, JSON_FILES_DIR, "data_histogram_x")
+                elif graph.get("type") == "wordcloud":
+                    if graph.get("x") in text_processed_by_cols.keys():
+                        data_wordcloud = visualizer.prepare_wordcloud(text_processed_by_cols, graph.get("x"))
+                        save_as_json(data_wordcloud, JSON_FILES_DIR, "data_wordcloud_x")       
         except:
             return "invalid input"
     return render_template("visualize.html", user_file_and_types=user_file_and_types)

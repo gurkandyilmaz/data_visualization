@@ -46,11 +46,6 @@ class ProcessData():
                     types_for_pandas.update({key:"datetime64[s]"})
 
             df_copy = df.copy().dropna().astype(dtype=types_for_pandas)
-            # datetime format should be day/month/year.
-            # TODO use the below code in the timeplot visualization
-            # datetime_cols = df_copy.select_dtypes(include=["datetime"])
-            # if not datetime_cols.columns.empty:
-            #     df_copy.loc[:, datetime_cols.columns] = df_copy.select_dtypes(include=["datetime"]).apply(lambda column:column.dt.strftime("%d/%m/%Y"))
 
             return df_copy
 
@@ -58,11 +53,11 @@ class ProcessData():
             return e
 
     def process_categorical(self, dataframe): 
-        df_categoric = dataframe.select_dtypes(include=["category"])
+        df_categoric = dataframe.select_dtypes(include=["category"]).copy()
         return df_categoric
 
     def process_numeric(self, dataframe):
-        df_numeric = dataframe.select_dtypes(include=["number"])
+        df_numeric = dataframe.select_dtypes(include=["number"]).copy()
         # TODO when user selects a categoric column as numeric ??
         return df_numeric
     
@@ -77,20 +72,19 @@ class ProcessData():
         # df_datetime = df.select_dtypes(include=["datetime"])
         return df_datetime
 
-    def process_df_text(self, df):
-        df_text = df.select_dtypes(include=["object"]).copy()
-        # df_text.fillna("NULL", inplace=True)
-        df_text.dropna(inplace=True)
-        text_series = df_text.apply(lambda text: " ".join(text.values))
-        text_series = text_series.apply(self.make_lowercase)
-        text_series = text_series.apply(self.remove_puncts)
-        text_series = text_series.apply(self.remove_stopwords)
-        text_series = text_series.apply(self.remove_numbers)
-        text_series = text_series.apply(self.stem_words)
+    def process_text(self, dataframe):
+        df_text = dataframe.select_dtypes(include=["object"]).copy()
+        text_dict = df_text.apply(lambda text: " ".join(text.values)).to_dict()
+        text_dict_processed = {}
+        for label, text in text_dict.items():
+            text = self.make_lowercase(text)
+            text = self.remove_puncts(text)
+            text = self.remove_stopwords(text)
+            text = self.remove_numbers(text)
+            # text = self.stem_words(text)
+            text_dict_processed.update({label:text})
 
-        df_row_length = df_text.apply(self.row_length)
-
-        return text_series, df_row_length
+        return text_dict_processed
 
     def make_lowercase(self, text):
         return text.lower()
@@ -129,19 +123,19 @@ class ProcessData():
         stopwords_list = [stopword.strip() for stopword in stopwords_list]
         return stopwords_list
 
-    def freq_dist(self, text):
-        counter = CountVectorizer(ngram_range=(1,2), max_features=100)
-        counter_fit = counter.fit_transform([text])
-        counts = np.asarray(counter_fit.sum(axis=0))
-        words = counter.get_feature_names()
-        freq = {}
-        for word, count in zip(words, counts[0]):
-            freq[word] = count
-        freq_sorted = {word:count for word,count in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
-        return freq_sorted
+    # def freq_dist(self, text):
+    #     counter = CountVectorizer(ngram_range=(1,2), max_features=100)
+    #     counter_fit = counter.fit_transform([text])
+    #     counts = np.asarray(counter_fit.sum(axis=0))
+    #     words = counter.get_feature_names()
+    #     freq = {}
+    #     for word, count in zip(words, counts[0]):
+    #         freq[word] = count
+    #     freq_sorted = {word:count for word,count in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+    #     return freq_sorted
 
-    def row_length(self, list_of_text):
-        row_len = list()
-        for element in list_of_text:
-            row_len.append(len(element))
-        return row_len
+    # def row_length(self, list_of_text):
+    #     row_len = list()
+    #     for element in list_of_text:
+    #         row_len.append(len(element))
+    #     return row_len
