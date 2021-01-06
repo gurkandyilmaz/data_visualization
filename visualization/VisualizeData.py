@@ -14,8 +14,7 @@ from pathlib import Path
 
 
 class VisualizeData():
-    def __init__(self, images_dir_to_save):
-        self._images_dir = images_dir_to_save
+    def __init__(self):
         self._figsize_x = 12
         self._figsize_y = 8
     
@@ -26,24 +25,23 @@ class VisualizeData():
             data_pieplot.get(column_name).append({"name": category, "y": value})
         return data_pieplot
     
-    def prepare_barplot(self, df, x, y=None):
-        if not y:
-            return self.prepare_pieplot(df, x)
+    def prepare_barplot(self, dataframe, cat_col, num_col=None):
+        if not num_col:
+            return self.prepare_pieplot(dataframe, cat_col)
         else:
-            data_barplot = {y:[]}
-            data_x_and_y = df.loc[:, [x,y]].groupby(x).mean().to_dict()
-            for label, value in data_x_and_y.get(y).items():
-                data_barplot.get(y).append({"name": label, "y": round(value,1)})
+            title = "{categoric} vs {numeric}".format(categoric=cat_col, numeric=num_col)
+            data_barplot = {title:[]}
+            cat_and_num = dataframe.loc[:, [cat_col,num_col]].groupby(cat_col).mean().to_dict()
+            for label, value in cat_and_num.get(num_col).items():
+                data_barplot.get(title).append({"name": label, "y": round(value,1)})
             return data_barplot
     
-    def prepare_scatterplot(self, df, x, y, z=None):
-        if not z:
-            title = "{0} vs {1}".format(x,y)
-            data_scatterplot = {}
-            df_copy = df.loc[:, [x,y]]
-            x_and_y_pairs = [[int(x),int(y)] for x, y in df_copy.values]
-            data_scatterplot.update({title: x_and_y_pairs})
-        
+    def prepare_scatterplot(self, dataframe, num_col_1, num_col_2):
+        title = "{0} vs {1}".format(num_col_1, num_col_2)
+        data_scatterplot = {}
+        df_copy = dataframe.loc[:, [num_col_1, num_col_2]]
+        num_col_pairs = [[int(num_1),int(num_2)] for num_1, num_2 in df_copy.values]
+        data_scatterplot.update({title: num_col_pairs})
         return data_scatterplot
 
     def prepare_timeplot(self, df, x, y1, y2=None, y3=None):
@@ -86,13 +84,16 @@ class VisualizeData():
         return data_correlation
 
     def prepare_histogram(self, df_numeric, x):
-        return df_numeric.loc[:, x].to_list()
+        data_histogram = {"name": x, "data": df_numeric.loc[:, x].to_list()}
+        return data_histogram
 
     def prepare_wordcloud(self, text_dict, x):
         word_frequencies = self.freq_dist(text_dict.get(x))
-        data_wordcloud = []
+        word_freq_list = []
+        data_wordcloud = {}
         for word, freq in word_frequencies.items():
-            data_wordcloud.append([word, int(freq)])
+            word_freq_list.append([word, int(freq)])
+        data_wordcloud.update({"name": x, "data": word_freq_list})
         return data_wordcloud
 
     def freq_dist(self, text):

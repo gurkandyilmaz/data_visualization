@@ -24,33 +24,39 @@ class ProcessData():
 
     def read_file(self, excel_file_path):
         try:
-            t0 = time.time()
+            # t0 = time.time()
             df = pd.read_excel(excel_file_path)
-            print("UPLOADED File {0} Read Time: {1:.5f} sec.".format(excel_file_path, time.time() - t0))
+            # print("UPLOADED File {0} Read Time: {1:.5f} sec.".format(excel_file_path, time.time() - t0))
             return df
-        except Exception as e:
-            print(e)
+        except Exception as error:
+            return error
     
-    def cast_datatypes(self, df, user_selected_types):
-        try:
-            types = user_selected_types.get("types")
-            types_for_pandas = {}
-            for key, value in types.items():
-                if value == "text":
-                    types_for_pandas.update({key:"object"})
-                elif value == "categoric":
-                    types_for_pandas.update({key:"category"})
-                elif value == "numeric":
-                    types_for_pandas.update({key:"int64"})
-                elif value == "datetime":
-                    types_for_pandas.update({key:"datetime64[s]"})
+    def cast_datatypes(self, dataframe, user_selected_types):
+        types = user_selected_types.get("types")
+        df_copy = dataframe.copy().dropna()
+        for col_name, col_type in types.items():
+            if col_type == "text":
+                try:
+                    df_copy.loc[:, col_name] = df_copy.loc[:, col_name].astype(dtype={col_name:"object"})
+                except Exception as error:
+                    raise TypeError("Could not convert {name} column to {dtype}. Detail: {err}".format(name=col_name, dtype=col_type, err=error))
+            elif col_type == "categoric":
+                try:
+                    df_copy.loc[:, col_name] = df_copy.loc[:, col_name].astype(dtype={col_name:"category"})
+                except Exception as error:
+                    raise TypeError("Could not convert {name} column to {dtype}. Detail: {err}".format(name=col_name, dtype=col_type, err=error))
+            elif col_type == "numeric":
+                try:
+                    df_copy.loc[:, col_name] = df_copy.loc[:, col_name].astype(dtype={col_name:"int64"})
+                except Exception as error:
+                    raise TypeError("Could not convert {name} column to {dtype}. Detail: {err}".format(name=col_name, dtype=col_type, err=error))
+            elif col_type == "datetime":
+                try:
+                    df_copy.loc[:, col_name] = df_copy.loc[:, col_name].astype(dtype={col_name:"datetime64[s]"})
+                except Exception as error:
+                    raise TypeError("Could not convert {name} column to {dtype}. Detail: {err}".format(name=col_name, dtype=col_type, err=error))
 
-            df_copy = df.copy().dropna().astype(dtype=types_for_pandas)
-
-            return df_copy
-
-        except Exception as e:
-            return e
+        return df_copy
 
     def process_categorical(self, dataframe): 
         df_categoric = dataframe.select_dtypes(include=["category"]).copy()
@@ -58,7 +64,6 @@ class ProcessData():
 
     def process_numeric(self, dataframe):
         df_numeric = dataframe.select_dtypes(include=["number"]).copy()
-        # TODO when user selects a categoric column as numeric ??
         return df_numeric
     
     def process_datetime(self, dataframe):
